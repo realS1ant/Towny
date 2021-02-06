@@ -5,7 +5,10 @@ import com.palmergames.bukkit.towny.TownyEconomyHandler;
 import com.palmergames.bukkit.towny.TownyMessaging;
 import com.palmergames.bukkit.towny.TownySettings;
 import com.palmergames.bukkit.towny.TownyUniverse;
+import com.palmergames.bukkit.towny.object.Nation;
 import com.palmergames.bukkit.towny.object.Town;
+import com.palmergames.bukkit.util.BukkitTools;
+
 import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.jetbrains.annotations.Nullable;
@@ -178,6 +181,7 @@ public class BankAccount extends Account {
 	public double getHoldingBalance() {
 		if (isBankrupt()) {
 			return getTownDebt() * -1;
+
 		}
 		return TownyEconomyHandler.getBalance(getName(), getBukkitWorld());
 	}
@@ -190,6 +194,20 @@ public class BankAccount extends Account {
 		return TownyEconomyHandler.getFormattedBalance(getHoldingBalance());
 	}
 
+	@Override
+	public World getBukkitWorld() {
+		World world = BukkitTools.getWorlds().get(0);
+		if (TownySettings.perWorldCurrencyEnabled()) {
+			if (isTownAccount())
+				if (getTown() != null)
+					world = getTown().getWorld();
+			else
+				if (getNation() != null)
+					world = getNation().getWorld(); 
+		}
+		return world;
+	}
+	
 	@Override
 	public void removeAccount() {
 		TownyEconomyHandler.removeAccount(getName());
@@ -255,6 +273,14 @@ public class BankAccount extends Account {
 		if (isTownAccount()) 
 			town = TownyUniverse.getInstance().getTown(this.getName().replace(TownySettings.getTownAccountPrefix(), ""));
 		return town;
+	}
+	
+	@Nullable
+	private Nation getNation() {
+		Nation nation = null;
+		if (!isTownAccount())
+			nation = TownyUniverse.getInstance().getNation(this.getName().replace(TownySettings.getNationAccountPrefix(), ""));
+		return nation;		
 	}
 	
 	private double getTownDebt() {
