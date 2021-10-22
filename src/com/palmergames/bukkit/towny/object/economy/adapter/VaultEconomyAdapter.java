@@ -15,12 +15,12 @@ public class VaultEconomyAdapter implements EconomyAdapter {
 
 	@Override
 	public boolean add(String accountName, double amount, World world) {
-		return economy.depositPlayer(accountName, amount).type == EconomyResponse.ResponseType.SUCCESS;
+		return economy.depositPlayer(accountName, world.getName(), amount).type == EconomyResponse.ResponseType.SUCCESS;
 	}
 
 	@Override
 	public boolean subtract(String accountName, double amount, World world) {
-		return economy.withdrawPlayer(accountName, amount).type == EconomyResponse.ResponseType.SUCCESS;
+		return economy.withdrawPlayer(accountName, world.getName(), amount).type == EconomyResponse.ResponseType.SUCCESS;
 	}
 
 	@Override
@@ -30,7 +30,7 @@ public class VaultEconomyAdapter implements EconomyAdapter {
 
 	@Override
 	public double getBalance(String accountName, World world) {
-		return economy.getBalance(accountName);
+		return economy.getBalance(accountName, world.getName());
 	}
 
 	@Override
