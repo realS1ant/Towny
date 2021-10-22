@@ -1,6 +1,7 @@
 package com.palmergames.bukkit.towny.object;
 
 import com.palmergames.bukkit.towny.Towny;
+import com.palmergames.bukkit.towny.TownyAPI;
 import com.palmergames.bukkit.towny.TownyMessaging;
 import com.palmergames.bukkit.towny.TownySettings;
 import com.palmergames.bukkit.towny.TownyUniverse;
@@ -689,6 +690,9 @@ public class Resident extends TownyObject implements InviteReceiver, EconomyHand
 				world = player.getWorld();
 			} else {
 				world = BukkitTools.getWorlds().get(0);
+				if (TownySettings.perWorldCurrencyEnabled())
+					world = hasTown() ? getTownOrNull().getWorld() : world;
+
 			}
 
 			account = new EconomyAccount(accountName, world);

@@ -158,6 +158,9 @@ public class MoneyUtil {
 		if (!TownyEconomyHandler.isActive())
 			throw new TownyException(Translatable.of("msg_err_no_economy"));
 		
+		if (TownySettings.perWorldCurrencyEnabled() && !loc.getWorld().equals(nation ? resident.getNationOrNull().getWorld() : resident.getTownOrNull().getWorld()))
+			throw new TownyException(Translatable.of("msg_err_you_can_only_use_the_bank_in_your_homeblocks_world"));
+		
 		if (amount < 0)
 			throw new TownyException(Translatable.of("msg_err_negative_money"));
 		
