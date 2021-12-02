@@ -13,12 +13,15 @@ nomad:
     - towny.command.town.list.*
     - towny.command.town.ranklist
     - towny.command.town.reslist
+    - towny.command.town.outlawlist
+    - towny.command.town.allylist
+    - towny.command.town.enemylist
     - towny.command.plot.group.*
     - towny.command.plot.perm
     - towny.command.plot.perm.hud
     - towny.command.plot.trust
     - towny.command.nation.list.*
-    - towny.command.nation.townlist  
+    - towny.command.nation.townlist
     - towny.command.nation.allylist
     - towny.command.nation.enemylist
     - towny.command.nation.ranklist

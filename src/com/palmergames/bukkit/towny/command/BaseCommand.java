@@ -2,8 +2,10 @@ package com.palmergames.bukkit.towny.command;
 
 import com.palmergames.bukkit.towny.TownyUniverse;
 import com.palmergames.bukkit.towny.exceptions.NotRegisteredException;
+import com.palmergames.bukkit.towny.exceptions.TownyException;
 import com.palmergames.bukkit.towny.object.Resident;
 import com.palmergames.bukkit.towny.object.Town;
+import com.palmergames.bukkit.towny.object.Translatable;
 import com.palmergames.bukkit.towny.object.Translation;
 import com.palmergames.bukkit.towny.utils.NameUtil;
 import com.palmergames.bukkit.util.BukkitTools;
@@ -214,6 +216,18 @@ public class BaseCommand implements TabCompleter{
 		if (str.equalsIgnoreCase("on")) return Optional.of(true);
 		else if (str.equalsIgnoreCase("off")) return Optional.of(false);
 		else return Optional.empty();
+	}
+
+	@NotNull
+	protected static Town getTownFromPlayerOrThrow(Player player) throws TownyException {
+		return getTownFromResidentOrThrow(getResidentOrThrow(player.getUniqueId()));
+	}
+
+	@NotNull
+	private static Town getTownFromResidentOrThrow(@NotNull Resident resident) throws TownyException {
+		if (!resident.hasTown())
+			throw new TownyException(Translatable.of("msg_err_dont_belong_town"));
+		return resident.getTownOrNull();
 	}
 
 	@NotNull

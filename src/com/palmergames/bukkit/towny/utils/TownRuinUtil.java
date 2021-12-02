@@ -130,45 +130,44 @@ public class TownRuinUtil {
 	 *
 	 * @param player The player reclaiming a ruined town.
 	 * @param plugin Instance of {@link Towny}
+	 * @throws TownyException when an error is returned.
 	 */
-	public static void processRuinedTownReclaimRequest(Player player, Towny plugin) {
+	public static void processRuinedTownReclaimRequest(Player player, Towny plugin) throws TownyException {
+		if(!TownySettings.getTownRuinsReclaimEnabled())
+			throw new TownyException(Translatable.of("msg_err_command_disable"));
 		Town town;
-		try {
-			Resident resident = TownyUniverse.getInstance().getResident(player.getUniqueId());
+		Resident resident = TownyUniverse.getInstance().getResident(player.getUniqueId());
 
-			if (resident == null || !resident.hasTown())
-				throw new TownyException(Translatable.of("msg_err_dont_belong_town"));
+		if (resident == null || !resident.hasTown())
+			throw new TownyException(Translatable.of("msg_err_dont_belong_town"));
 
-			//Ensure town is ruined
-			town = resident.getTown();
-			if (!town.isRuined())
-				throw new TownyException(Translatable.of("msg_err_cannot_reclaim_town_unless_ruined"));
+		//Ensure town is ruined
+		town = resident.getTown();
+		if (!town.isRuined())
+			throw new TownyException(Translatable.of("msg_err_cannot_reclaim_town_unless_ruined"));
 
-			//Validate if player can pay
-			double townReclaimCost = TownySettings.getEcoPriceReclaimTown();
-			if (TownyEconomyHandler.isActive() && !resident.getAccount().canPayFromHoldings(townReclaimCost))
-				throw new TownyException(Translatable.of("msg_insuf_funds"));
+		//Validate if player can pay
+		double townReclaimCost = TownySettings.getEcoPriceReclaimTown();
+		if (TownyEconomyHandler.isActive() && !resident.getAccount().canPayFromHoldings(townReclaimCost))
+			throw new TownyException(Translatable.of("msg_insuf_funds"));
 
-			//Validate if player can remove at this time
-			if (TownySettings.getTownRuinsMinDurationHours() - getTimeSinceRuining(town) > 0)
-				throw new TownyException(Translatable.of("msg_err_cannot_reclaim_town_yet", TownySettings.getTownRuinsMinDurationHours() - getTimeSinceRuining(town)));
+		//Validate if player can remove at this time
+		if (TownySettings.getTownRuinsMinDurationHours() - getTimeSinceRuining(town) > 0)
+			throw new TownyException(Translatable.of("msg_err_cannot_reclaim_town_yet", TownySettings.getTownRuinsMinDurationHours() - getTimeSinceRuining(town)));
 
-			if (TownyEconomyHandler.isActive() && townReclaimCost > 0) { 
-				Confirmation.runOnAccept(() -> {
-					if (!resident.getAccount().canPayFromHoldings(townReclaimCost)) {
-						TownyMessaging.sendErrorMsg(player, Translatable.of("msg_insuf_funds"));
-						return;
-					}
-					resident.getAccount().withdraw(townReclaimCost, "Cost of town reclaim.");
-					reclaimTown(resident, town);
-				})
-				.setTitle(Translatable.of("msg_confirm_purchase", TownyEconomyHandler.getFormattedBalance(townReclaimCost)))
-				.sendTo(player);
-			} else {
+		if (TownyEconomyHandler.isActive() && townReclaimCost > 0) { 
+			Confirmation.runOnAccept(() -> {
+				if (!resident.getAccount().canPayFromHoldings(townReclaimCost)) {
+					TownyMessaging.sendErrorMsg(player, Translatable.of("msg_insuf_funds"));
+					return;
+				}
+				resident.getAccount().withdraw(townReclaimCost, "Cost of town reclaim.");
 				reclaimTown(resident, town);
-			}
-		} catch (TownyException e) {
-			TownyMessaging.sendErrorMsg(player, e.getMessage(player));
+			})
+			.setTitle(Translatable.of("msg_confirm_purchase", TownyEconomyHandler.getFormattedBalance(townReclaimCost)))
+			.sendTo(player);
+		} else {
+			reclaimTown(resident, town);
 		}
 	}
 
