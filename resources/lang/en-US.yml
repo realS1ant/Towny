@@ -1,5 +1,5 @@
 name: Towny
-version: 0.141
+version: 0.142
 language: english
 author: ElgarL
 website: 'http://townyadvanced.github.io/'
@@ -1295,6 +1295,7 @@ msg_err_outlawed_players_no_teleport: '&4You are outlawed in the town you are cu
 msg_err_you_cannot_use_command_while_in_outlaw_town: '&4You cannot use that command while in a town you are outlawed in.'
 
 #Added in 0.110
+msg_safe_mode: "[Error] Locked in safe mode!"
 msg_safe_mode_base: '[Error] Towny is locked in Safe Mode due to an error! '
 msg_safe_mode_player: 'Tell an admin to check the server''s console.'
 msg_safe_mode_admin: 'Check the server''s console for more information.'
@@ -1619,5 +1620,9 @@ msg_your_locale: 'Towny uses your client''s locale (%s) to translate its message
 #Message shown when a player tries to rename their town too quickly.
 msg_you_must_wait_x_seconds_before_renaming_your_town: 'You must wait %s seconds before you can rename your town again.'
 
-#Added in 1.141
+#Added in 0.141
 msg_newday_already_scheduled_soon: 'A new day task is already scheduled to happen soon.'
+
+#Added in 0.142
+msg_err_console_only: 'This command can only be used by console.'
+msg_err_player_only: 'This command can only be used by a player.'
