@@ -28,11 +28,15 @@ import com.palmergames.bukkit.util.BukkitTools;
 import com.palmergames.bukkit.util.ChatTools;
 import com.palmergames.bukkit.util.Colors;
 import com.palmergames.util.StringMgmt;
+
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextColor;
+import net.kyori.adventure.text.minimessage.MiniMessage;
+
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.ConsoleCommandSender;
@@ -65,7 +69,44 @@ public class TownyFormatter {
 	public static final String hoverFormat = "%s[%s%s%s]";
 	public static final String bracketFormat = " %1$s[%2$s %3$s%1$s]";
 	
-	public static void initialize() {}
+	public static TextColor status_title_primary_colour;
+	public static TextColor status_title_secondary_colour;
+	public static TextColor status_format_list_1;
+	public static TextColor status_format_list_2;
+	public static TextColor status_format_list_3;
+	public static TextColor status_format_key_value_key;
+	public static TextColor status_format_key_value_value;
+	public static TextColor status_format_bracket_element;
+	public static TextColor status_format_hover_key;
+	public static TextColor status_format_hover_bracket_colour;
+	public static TextColor status_format_key_important;
+	public static TextColor status_splitter_colour;
+	public static Component splitter;
+	
+	public static void initialize() {
+		status_title_primary_colour = getTextColor(Translation.of("status_title_primary_colour"), NamedTextColor.GOLD);
+		status_title_secondary_colour = getTextColor(Translation.of("status_title_secondary_colour"), NamedTextColor.YELLOW);
+		status_format_list_1 = getTextColor(Translation.of("status_format_list_1"), NamedTextColor.DARK_GREEN);
+		status_format_list_2 = getTextColor(Translation.of("status_format_list_2"), NamedTextColor.GREEN);
+		status_format_list_3 = getTextColor(Translation.of("status_format_list_3"), NamedTextColor.WHITE);
+		status_format_key_value_key = getTextColor(Translation.of("status_format_key_value_key"), NamedTextColor.DARK_GREEN);
+		status_format_key_value_value = getTextColor(Translation.of("status_format_key_value_value"), NamedTextColor.GREEN);
+		status_format_bracket_element = getTextColor(Translation.of("status_format_bracket_element"), NamedTextColor.AQUA);
+		status_format_hover_key = getTextColor(Translation.of("status_format_hover_key"), NamedTextColor.GREEN);
+		status_format_hover_bracket_colour = getTextColor(Translation.of("status_format_hover_bracket_colour"), NamedTextColor.GRAY);
+		status_format_key_important = getTextColor(Translation.of("status_format_key_important"), NamedTextColor.RED);
+		status_splitter_colour = getTextColor(Translation.of("status_splitter_colour"), NamedTextColor.GRAY);
+		splitter = Component.text(Translation.of("status_splitter")).color(status_splitter_colour);
+	}
+	
+	private static TextColor getTextColor(String value, NamedTextColor fallback) {
+		TextColor color = Colors.toNamedTextColor(value);
+		if (color == null) 
+			color = TextColor.fromHexString(value);
+		if (color == null)
+			color = fallback;
+		return color;
+	}
 
 	/*
 	 * TownyObject StatusScreen makers.
@@ -92,23 +133,22 @@ public class TownyFormatter {
 			owner = townBlock.getResidentOrNull();
 		else
 			owner = town;
-
-		screen.addComponentOf("townblock_title", ChatTools.formatTitle("(" + townBlock.getCoord().toString() + ") " + owner.getFormattedName() + ((playerIsOnlineAndVisible(owner.getName(), player)) ? translator.of("online") : "")));
+		screen.addComponentOf("townblock_title", getTitleComponent(getTownBlockTitleSlug(townBlock, owner, player, translator)));
 		if (townBlock.getClaimedAt() > 0)
-			screen.addComponentOf("claimedat", colourKeyValue(translator.of("msg_plot_perm_claimed_at"), registeredFormat.format(townBlock.getClaimedAt())));
+			screen.addComponentOf("claimedat", colourKeyValueComponent(translator.of("msg_plot_perm_claimed_at"), registeredFormat.format(townBlock.getClaimedAt())));
 		if (!townBlock.getType().equals(TownBlockType.RESIDENTIAL))
-			screen.addComponentOf("townblock_plotType", colourKeyValue(translator.of("status_plot_type"), townBlock.getType().toString()));
-		screen.addComponentOf("perm", colourKeyValue(translator.of("status_perm"), ((owner instanceof Resident) ? townBlock.getPermissions().getColourString().replace("n", "t") : townBlock.getPermissions().getColourString().replace("f", "r"))));
-		screen.addComponentOf("pvp", colourKeyValue(translator.of("status_pvp"), ((!preventPVP) ? translator.of("status_on"): translator.of("status_off")))); 
-		screen.addComponentOf("explosion", colourKeyValue(translator.of("explosions"), ((world.isForceExpl() || townBlock.getPermissions().explosion) ? translator.of("status_on"): translator.of("status_off")))); 
-		screen.addComponentOf("firespread", colourKeyValue(translator.of("firespread"), ((town.isFire() || world.isForceFire() || townBlock.getPermissions().fire) ? translator.of("status_on"):translator.of("status_off")))); 
-		screen.addComponentOf("mobspawns", colourKeyValue(translator.of("mobspawns"), ((world.isForceTownMobs() || townBlock.getPermissions().mobs) ?  translator.of("status_on"): translator.of("status_off"))));
+			screen.addComponentOf("townblock_plotType", colourKeyValueComponent(translator.of("status_plot_type"), townBlock.getType().toString()));
+		screen.addComponentOf("perm", colourKeyValueComponent(translator.of("status_perm"), ((owner instanceof Resident) ? townBlock.getPermissions().getColourString().replace("n", "t") : townBlock.getPermissions().getColourString().replace("f", "r"))));
+		screen.addComponentOf("pvp", colourKeyValueComponent(translator.of("status_pvp"), ((!preventPVP) ? translator.of("status_on"): translator.of("status_off")))); 
+		screen.addComponentOf("explosion", colourKeyValueComponent(translator.of("explosions"), ((world.isForceExpl() || townBlock.getPermissions().explosion) ? translator.of("status_on"): translator.of("status_off")))); 
+		screen.addComponentOf("firespread", colourKeyValueComponent(translator.of("firespread"), ((town.isFire() || world.isForceFire() || townBlock.getPermissions().fire) ? translator.of("status_on"):translator.of("status_off")))); 
+		screen.addComponentOf("mobspawns", colourKeyValueComponent(translator.of("mobspawns"), ((world.isForceTownMobs() || townBlock.getPermissions().mobs) ?  translator.of("status_on"): translator.of("status_off"))));
 
 		if (townBlock.hasPlotObjectGroup())
-			screen.addComponentOf("plotgroup", colourKey(translator.of("status_plot_group_name_and_size", townBlock.getPlotObjectGroup().getName(), townBlock.getPlotObjectGroup().getTownBlocks().size())));
+			screen.addComponentOf("plotgroup", colourKeyComponent(translator.of("status_plot_group_name_and_size", townBlock.getPlotObjectGroup().getName(), townBlock.getPlotObjectGroup().getTownBlocks().size())));
 		
 		if (townBlock.getTrustedResidents().size() > 0)
-			screen.addComponentOf("trusted", getFormattedTownyObjects(translator.of("status_trustedlist"), new ArrayList<>(townBlock.getTrustedResidents())));
+			screen.addComponentOf("trusted", getFormattedTownyObjectsComponent(translator.of("status_trustedlist"), new ArrayList<>(townBlock.getTrustedResidents())));
 		
 		// Add any metadata which opt to be visible.
 		List<Component> fields = getExtraFields(townBlock);
@@ -132,6 +172,31 @@ public class TownyFormatter {
 		return screen;
 	}
 
+	private static String getTownBlockTitleSlug(TownBlock townBlock, TownyObject owner, Player player, Translator translator) {
+		return "(" + townBlock.getCoord().toString() + ") " + owner.getFormattedName() + ((playerIsOnlineAndVisible(owner.getName(), player)) ? translator.of("online") : "");
+	}
+
+	public static Component getTitleComponent(String slug) {
+		return parseMiniMessage(ChatTools.formatTitle(slug));
+	}
+	
+	public static Component getSubTitleComponent(String slug) {
+		return parseMiniMessage(ChatTools.formatSubTitle(slug));
+	}
+	
+	public static Component getTitleComponent(TownyObject object) {
+		String title = object.getFormattedName();
+		if (title.length() > 51)
+			title = object.getName();
+		if (title.length() > 51)
+			title = title.substring(0, 51);
+		return getTitleComponent(title);
+	}
+	
+	private static Component parseMiniMessage(String slug) {
+		return MiniMessage.miniMessage().deserialize(slug);
+	}
+
 	/**
 	 *  Gets the status screen of a Resident
 	 *  
@@ -145,7 +210,7 @@ public class TownyFormatter {
 		final Translator translator = Translator.locale(Translation.getLocale(sender));
 
 		// ___[ King Harlus ]___
-		screen.addComponentOf("title", ChatTools.formatTitle(resident.getFormattedName() + (playerIsOnlineAndVisible(resident.getName(), sender) ? translator.of("online2") : "")));
+		screen.addComponentOf("title", getTitleComponent(resident.getFormattedName() + (playerIsOnlineAndVisible(resident.getName(), sender) ? translator.of("online2") : "")));
 
 		// First used if last online is this year, 2nd used if last online is early than this year.
 		// Registered: Sept 3 2009 | Last Online: March 7 @ 14:30
@@ -155,7 +220,7 @@ public class TownyFormatter {
 			screen.addComponentOf("lastonline", getResidentLastOnline(resident, translator));
 		
 		// Town: Camelot
-		String townLine = colourKeyValue(translator.of("status_town"), (!resident.hasTown() ? translator.of("status_no_town") : resident.getTownOrNull().getFormattedName() + formatPopulationBrackets(resident.getTownOrNull().getResidents().size()) ));
+		Component townLine = colourKeyValueComponent(translator.of("status_town"), (!resident.hasTown() ? translator.of("status_no_town") : resident.getTownOrNull().getFormattedName() + formatPopulationBrackets(resident.getTownOrNull().getResidents().size()) ));
 		if (!resident.hasTown())
 			screen.addComponentOf("town", townLine);
 		else {
@@ -166,11 +231,11 @@ public class TownyFormatter {
 			screen.addComponentOf("town", townLine,
 				HoverEvent.showText(Component.text(Colors.translateColorCodes(String.format(TownySettings.getPAPIFormattingTown(), town.getFormattedName())))
 					.append(Component.newline())
-					.append(Component.text(getResidentJoinedTownDate(resident, translator)))
+					.append(getResidentJoinedTownDate(resident, translator))
 					.append(Component.newline())
-					.append(Component.text(colourKeyValue(translator.of("rank_list_mayor"), town.getMayor().getFormattedName())))
+					.append(colourKeyValueComponent(translator.of("rank_list_mayor"), town.getMayor().getFormattedName()))
 					.append(Component.newline())
-					.append(Component.text(colourKeyValue(translator.of("res_list"), StringMgmt.join(residents, ", "))))
+					.append(colourKeyValueComponent(translator.of("res_list"), StringMgmt.join(residents, ", ")))
 					.append(Component.newline())
 					.append(Component.text(translator.of("status_hover_click_for_more")))),
 				ClickEvent.runCommand("/towny:town " + town.getName())
@@ -185,12 +250,12 @@ public class TownyFormatter {
 			if (towns.length > 10)
 				towns = shortenOverlengthArray(towns, 11, translator);
 
-			screen.addComponentOf("nation", colourKeyValue(translator.of("status_town_nation"), nation.getName() + formatPopulationBrackets(nation.getTowns().size())), 
+			screen.addComponentOf("nation", colourKeyValueComponent(translator.of("status_town_nation"), nation.getName() + formatPopulationBrackets(nation.getTowns().size())), 
 					HoverEvent.showText(Component.text(Colors.translateColorCodes(String.format(TownySettings.getPAPIFormattingNation(), nation.getFormattedName())))
 							.append(Component.newline())
-							.append(Component.text(colourKeyValue(translator.of("status_nation_king"), nation.getCapital().getMayor().getFormattedName())))
+							.append(colourKeyValueComponent(translator.of("status_nation_king"), nation.getCapital().getMayor().getFormattedName()))
 							.append(Component.newline())
-							.append(Component.text(colourKeyValue(translator.of("town_plu"), StringMgmt.join(towns, ", "))))
+							.append(colourKeyValueComponent(translator.of("town_plu"), StringMgmt.join(towns, ", ")))
 							.append(Component.newline())
 							.append(Component.text(translator.of("status_hover_click_for_more")))),
 					ClickEvent.runCommand("/towny:nation " + nation.getName())
@@ -199,18 +264,18 @@ public class TownyFormatter {
 		
 		// Bank: 534 coins
 				if (TownyEconomyHandler.isActive())
-					screen.addComponentOf("bank", colourKeyValue(translator.of("status_bank"), resident.getAccount().getHoldingFormattedBalance()),
+					screen.addComponentOf("bank", colourKeyValueComponent(translator.of("status_bank"), resident.getAccount().getHoldingFormattedBalance()),
 							HoverEvent.showText(Component.text(translator.of("status_hover_click_for_more"))),
 							ClickEvent.runCommand("/towny:resident tax " + resident.getName()));
 		
 		// Owner of: 4 plots
 		// Perm: Build = f-- Destroy = fa- Switch = fao Item = ---
-		screen.addComponentOf("ownsXPlots", colourKey(translator.of("owner_of_x_plots", resident.getTownBlocks().size())));
-		screen.addComponentOf("perm", colourKeyValue(translator.of("status_perm"), resident.getPermissions().getColourString().replace("n", "t")));
-		screen.addComponentOf("pvp", colourKeyValue(translator.of("status_pvp"), (resident.getPermissions().pvp) ? translator.of("status_on"): translator.of("status_off")));
-		screen.addComponentOf("explosions", colourKeyValue(translator.of("explosions"), (resident.getPermissions().explosion) ? translator.of("status_on"): translator.of("status_off"))); 
-		screen.addComponentOf("firespread", colourKeyValue(translator.of("firespread"), (resident.getPermissions().fire) ? translator.of("status_on"): translator.of("status_off"))); 
-		screen.addComponentOf("mobspawns", colourKeyValue(translator.of("mobspawns"), (resident.getPermissions().mobs) ? translator.of("status_on"): translator.of("status_off")));
+		screen.addComponentOf("ownsXPlots", colourKeyComponent(translator.of("owner_of_x_plots", resident.getTownBlocks().size())));
+		screen.addComponentOf("perm", colourKeyValueComponent(translator.of("status_perm"), resident.getPermissions().getColourString().replace("n", "t")));
+		screen.addComponentOf("pvp", colourKeyValueComponent(translator.of("status_pvp"), (resident.getPermissions().pvp) ? translator.of("status_on"): translator.of("status_off")));
+		screen.addComponentOf("explosions", colourKeyValueComponent(translator.of("explosions"), (resident.getPermissions().explosion) ? translator.of("status_on"): translator.of("status_off"))); 
+		screen.addComponentOf("firespread", colourKeyValueComponent(translator.of("firespread"), (resident.getPermissions().fire) ? translator.of("status_on"): translator.of("status_off"))); 
+		screen.addComponentOf("mobspawns", colourKeyValueComponent(translator.of("mobspawns"), (resident.getPermissions().mobs) ? translator.of("status_on"): translator.of("status_off")));
 		
 		if (resident.isNPC()) {
 			screen.addComponentOf("npcstatus", translator.of("msg_status_npc", resident.getName()));
@@ -229,15 +294,15 @@ public class TownyFormatter {
 		// Embassies in: Camelot, London, Tokyo.
 		List<Town> townEmbassies = getResidentsEmbassyTowns(resident);
 		if (townEmbassies.size() > 0)
-			screen.addComponentOf("embassiesInTowns", getFormattedTownyObjects(translator.of("status_embassy_town"), new ArrayList<>(townEmbassies)));
+			screen.addComponentOf("embassiesInTowns", getFormattedTownyObjectsComponent(translator.of("status_embassy_town"), new ArrayList<>(townEmbassies)));
 			
 		// Town ranks
 		if (resident.hasTown() && !resident.getTownRanks().isEmpty())
-			screen.addComponentOf("townRanks", colourKeyValue(translator.of("status_town_ranks"), StringMgmt.capitalize(StringMgmt.join(resident.getTownRanks(), ", "))));
+			screen.addComponentOf("townRanks", colourKeyValueComponent(translator.of("status_town_ranks"), StringMgmt.capitalize(StringMgmt.join(resident.getTownRanks(), ", "))));
 		
 		//Nation ranks
 		if (resident.hasNation() && !resident.getNationRanks().isEmpty())
-			screen.addComponentOf("nationRanks", colourKeyValue(translator.of("status_nation_ranks"),StringMgmt.capitalize(StringMgmt.join(resident.getNationRanks(), ", "))));
+			screen.addComponentOf("nationRanks", colourKeyValueComponent(translator.of("status_nation_ranks"),StringMgmt.capitalize(StringMgmt.join(resident.getNationRanks(), ", "))));
 		
 		// Jailed: yes if they are jailed.
 		if (resident.isJailed())
@@ -245,7 +310,7 @@ public class TownyFormatter {
 		
 		// Friends [12]: James, Carry, Mason
 		if (resident.getFriends() != null && !resident.getFriends().isEmpty())
-			screen.addComponentOf("friendsLine", getFormattedTownyObjects(translator.of("status_friends"), new ArrayList<>(resident.getFriends())));
+			screen.addComponentOf("friendsLine", getFormattedTownyObjectsComponent(translator.of("status_friends"), new ArrayList<>(resident.getFriends())));
 		
 		// Add any metadata which opt to be visible.
 		List<Component> fields = getExtraFields(resident);
@@ -283,26 +348,32 @@ public class TownyFormatter {
 		TownyWorld world = town.getHomeblockWorld();
 
 		// ___[ Raccoon City ]___
-		screen.addComponentOf("title", ChatTools.formatTitle(town));
+		screen.addComponentOf("title", getTitleComponent(town));
 		
 		// (PvP) (Open) (Peaceful)
 		List<String> sub = getTownSubtitle(town, world, translator);
 		if (!sub.isEmpty())
-			screen.addComponentOf("subtitle", ChatTools.formatSubTitle(StringMgmt.join(sub, " ")));
+			screen.addComponentOf("subtitle", getSubTitleComponent(StringMgmt.join(sub, " ")));
 		
 		// Board: Get your fried chicken
 		if (town.getBoard() != null && !town.getBoard().isEmpty())
-			screen.addComponentOf("board", colourKeyValue(translator.of("status_town_board"), town.getBoard()));
+			screen.addComponentOf("board", colourKeyValueComponent(translator.of("status_town_board"), town.getBoard()));
 
 		// Created Date
 		if (town.getRegistered() != 0) 
-			screen.addComponentOf("registered", colourKeyValue(translator.of("status_founded"), registeredFormat.format(town.getRegistered())));
+			screen.addComponentOf("registered", colourKeyValueComponent(translator.of("status_founded"), registeredFormat.format(town.getRegistered())));
 
 		// Town Size: 0 / 16 [Bought: 0/48] [Bonus: 0] [Home: 33,44]
-		screen.addComponentOf("townblocks", colourKeyValue(translator.of("status_town_size"), translator.of("status_fractions", town.getTownBlocks().size(), TownySettings.getMaxTownBlocks(town))) +
-	            (TownySettings.isSellingBonusBlocks(town) ? colourBracketElement(translator.of("status_town_size_bought"), translator.of("status_fractions", town.getPurchasedBlocks(), TownySettings.getMaxPurchasedBlocks(town))) : "") + 
-	            (town.getBonusBlocks() > 0 ? colourBracketElement(translator.of("status_town_size_bonus"), String.valueOf(town.getBonusBlocks())) : "") + 
-	            (TownySettings.getNationBonusBlocks(town) > 0 ? colourBracketElement(translator.of("status_town_size_nationbonus"), String.valueOf(TownySettings.getNationBonusBlocks(town))) : ""));
+		screen.addComponentOf("townblocks", colourKeyValueComponent(translator.of("status_town_size"), translator.of("status_fractions", town.getTownBlocks().size(), TownySettings.getMaxTownBlocks(town)))
+				.append(TownySettings.isSellingBonusBlocks(town) 
+						? colourBracketElementComponent(translator.of("status_town_size_bought"), translator.of("status_fractions", town.getPurchasedBlocks(), TownySettings.getMaxPurchasedBlocks(town))) 
+						: Component.empty())
+				.append(town.getBonusBlocks() > 0 
+						? colourBracketElementComponent(translator.of("status_town_size_bonus"), String.valueOf(town.getBonusBlocks())) 
+						: Component.empty())
+				.append(TownySettings.getNationBonusBlocks(town) > 0 
+						? colourBracketElementComponent(translator.of("status_town_size_nationbonus"), String.valueOf(TownySettings.getNationBonusBlocks(town))) 
+						: Component.empty()));
 
 		if (town.isPublic()) {
 			Component homeComponent = Component.text(!town.isPublic() ? "" : (translator.of("status_home_element", (TownySettings.getTownDisplaysXYZ() ?
@@ -319,16 +390,16 @@ public class TownyFormatter {
 
 		// Outposts: 3
 		if (TownySettings.isAllowingOutposts()) {
-			String outpostLine = "";
+			Component outpostLine = Component.empty();
 			if (TownySettings.isOutpostsLimitedByLevels()) {
-				outpostLine = colourKeyValue(translator.of("status_town_outposts"), translator.of("status_fractions", town.getMaxOutpostSpawn(), town.getOutpostLimit()));
+				outpostLine = colourKeyValueComponent(translator.of("status_town_outposts"), translator.of("status_fractions", town.getMaxOutpostSpawn(), town.getOutpostLimit()));
 				if (town.hasNation()) {
 					int nationBonus = (Integer) TownySettings.getNationLevel(town.getNationOrNull()).get(TownySettings.NationLevel.NATION_BONUS_OUTPOST_LIMIT);
 					if (nationBonus > 0)					
-						outpostLine += colourBracketElement(translator.of("status_town_size_nationbonus"), String.valueOf(nationBonus));
+						outpostLine.append(colourBracketElementComponent(translator.of("status_town_size_nationbonus"), String.valueOf(nationBonus)));
 				}
 			} else if (town.hasOutpostSpawn()) {
-				outpostLine = colourKeyValue(translator.of("status_town_outposts"), String.valueOf(town.getMaxOutpostSpawn()));
+				outpostLine = colourKeyValueComponent(translator.of("status_town_outposts"), String.valueOf(town.getMaxOutpostSpawn()));
 			}
 			screen.addComponentOf("outposts", outpostLine,
 					HoverEvent.showText(Component.text(translator.of("status_hover_click_for_more"))),
@@ -336,18 +407,18 @@ public class TownyFormatter {
 		}
 
 		// Permissions: B=rnao D=---- S=rna- I=rnao
-		screen.addComponentOf("perm", colourKeyValue(translator.of("status_perm"), town.getPermissions().getColourString().replace("f", "r")));
-		screen.addComponentOf("explosion", colourKeyValue(translator.of("explosions"), (town.isBANG() || world.isForceExpl()) ? translator.of("status_on"): translator.of("status_off")));
-		screen.addComponentOf("firespread", colourKeyValue(translator.of("firespread"), (town.isFire() || world.isForceFire()) ? translator.of("status_on"): translator.of("status_off"))); 
-		screen.addComponentOf("mobspawns", colourKeyValue(translator.of("mobspawns"), (town.hasMobs() || world.isForceTownMobs()) ? translator.of("status_on"): translator.of("status_off")));
+		screen.addComponentOf("perm", colourKeyValueComponent(translator.of("status_perm"), town.getPermissions().getColourString().replace("f", "r")));
+		screen.addComponentOf("explosion", colourKeyValueComponent(translator.of("explosions"), (town.isBANG() || world.isForceExpl()) ? translator.of("status_on"): translator.of("status_off")));
+		screen.addComponentOf("firespread", colourKeyValueComponent(translator.of("firespread"), (town.isFire() || world.isForceFire()) ? translator.of("status_on"): translator.of("status_off"))); 
+		screen.addComponentOf("mobspawns", colourKeyValueComponent(translator.of("mobspawns"), (town.hasMobs() || world.isForceTownMobs()) ? translator.of("status_on"): translator.of("status_off")));
 
 		if (TownySettings.getTownRuinsEnabled() && town.isRuined()) {
-			screen.addComponentOf("ruinedTime", colourKey(translator.of("msg_time_remaining_before_full_removal", TownySettings.getTownRuinsMaxDurationHours() - TownRuinUtil.getTimeSinceRuining(town))));
+			screen.addComponentOf("ruinedTime", colourKeyComponent(translator.of("msg_time_remaining_before_full_removal", TownySettings.getTownRuinsMaxDurationHours() - TownRuinUtil.getTimeSinceRuining(town))));
 			if (TownySettings.getTownRuinsReclaimEnabled()) {
 				if (TownRuinUtil.getTimeSinceRuining(town) < TownySettings.getTownRuinsMinDurationHours())
-					screen.addComponentOf("reclaim", colourKeyImportant(translator.of("msg_time_until_reclaim_available", TownySettings.getTownRuinsMinDurationHours() - TownRuinUtil.getTimeSinceRuining(town))));
+					screen.addComponentOf("reclaim", colourKeyImportantComponent(translator.of("msg_time_until_reclaim_available", TownySettings.getTownRuinsMinDurationHours() - TownRuinUtil.getTimeSinceRuining(town))));
 				else 
-					screen.addComponentOf("reclaim", colourKeyImportant(translator.of("msg_reclaim_available")));
+					screen.addComponentOf("reclaim", colourKeyImportantComponent(translator.of("msg_reclaim_available")));
 			}
 			// Only display the remaining fields if town is not ruined
 		} else {
@@ -356,7 +427,7 @@ public class TownyFormatter {
 				addTownMoneyComponents(town, translator, screen);
 
 			// Mayor: MrSand
-			screen.addComponentOf("mayor", colourKeyValue(translator.of("rank_list_mayor"), town.getMayor().getFormattedName()),
+			screen.addComponentOf("mayor", colourKeyValueComponent(translator.of("rank_list_mayor"), town.getMayor().getFormattedName()),
 					HoverEvent.showText(Component.text(translator.of("registered_last_online", registeredFormat.format(town.getMayor().getRegistered()), lastOnlineFormatIncludeYear.format(town.getMayor().getLastOnline())))
 						.append(Component.newline())
 						.append(Component.text(translator.of("status_hover_click_for_more")))),
@@ -372,18 +443,18 @@ public class TownyFormatter {
 
 				TextComponent hover = Component.text(Colors.translateColorCodes(String.format(TownySettings.getPAPIFormattingNation(), town.getNationOrNull().getFormattedName())))
 						.append(Component.newline())
-						.append(Component.text(getTownJoinedNationDate(town, translator)))
+						.append(getTownJoinedNationDate(town, translator))
 						.append(Component.newline())
-						.append(Component.text(colourKeyValue(translator.of("status_nation_king"), town.getNationOrNull().getCapital().getMayor().getFormattedName())))
+						.append(colourKeyValueComponent(translator.of("status_nation_king"), town.getNationOrNull().getCapital().getMayor().getFormattedName()))
 						.append(Component.newline())
-						.append(Component.text(colourKeyValue(translator.of("town_plu"), StringMgmt.join(towns, ", "))));
+						.append(colourKeyValueComponent(translator.of("town_plu"), StringMgmt.join(towns, ", ")));
 				int nationZoneSize = town.getNationZoneSize();
 				if (nationZoneSize > 0)
-					hover = hover.append(Component.newline().append(Component.text(colourKeyValue(translator.of("status_nation_zone_size"), town.isNationZoneEnabled() ? String.valueOf(nationZoneSize) : translator.of("status_off_bad")))));
+					hover = hover.append(Component.newline().append(colourKeyValueComponent(translator.of("status_nation_zone_size"), town.isNationZoneEnabled() ? String.valueOf(nationZoneSize) : translator.of("status_off_bad"))));
 				hover = hover.append(Component.newline())
 						.append(Component.text(translator.of("status_hover_click_for_more")));
 				
-				screen.addComponentOf("nation", colourKeyValue(translator.of("status_town_nation"), town.getNationOrNull().getName() + formatPopulationBrackets(town.getNationOrNull().getTowns().size())), 
+				screen.addComponentOf("nation", colourKeyValueComponent(translator.of("status_town_nation"), town.getNationOrNull().getName() + formatPopulationBrackets(town.getNationOrNull().getTowns().size())), 
 						hover.asHoverEvent(),
 						ClickEvent.runCommand("/towny:nation " + town.getNationOrNull().getName())
 						);
@@ -393,7 +464,7 @@ public class TownyFormatter {
 			// Assistants [2]: Sammy, Ginger
 			List<String> ranklist = getRanks(town, locale);
 			if (ranklist.size() > 0)
-				screen.addComponentOf("townranks", colourHoverKey(translator.of("status_rank_list")),
+				screen.addComponentOf("townranks", colourHoverKeyComponent(translator.of("status_rank_list")),
 						HoverEvent.showText(Component.text(String.join("\n", ranklist))
 							.append(Component.newline())
 							.append(Component.text(translator.of("status_hover_click_for_more")))),
@@ -403,7 +474,7 @@ public class TownyFormatter {
 			String[] residents = getFormattedNames(town.getResidents().toArray(new Resident[0]));
 			if (residents.length > 34)
 				residents = shortenOverlengthArray(residents, 35, translator);
-			screen.addComponentOf("residents", colourHoverKey(translator.of("res_list")),
+			screen.addComponentOf("residents", colourHoverKeyComponent(translator.of("res_list")),
 				HoverEvent.showText(Component.text(getFormattedStrings(translator.of("res_list"), Arrays.stream(residents).collect(Collectors.toList()), town.getResidents().size()))
 					.append(Component.newline())
 					.append(Component.text(translator.of("status_hover_click_for_more")))),
@@ -446,19 +517,19 @@ public class TownyFormatter {
 		final Translator translator = Translator.locale(locale);
 
 		// ___[ Azur Empire (Open)]___
-		screen.addComponentOf("nation_title", ChatTools.formatTitle(nation));
+		screen.addComponentOf("nation_title", getTitleComponent(nation));
 		List<String> sub = getNationSubtitle(nation, translator);
 		if (!sub.isEmpty())
-			screen.addComponentOf("subtitle", ChatTools.formatSubTitle(StringMgmt.join(sub, " ")));
+			screen.addComponentOf("subtitle", getSubTitleComponent(StringMgmt.join(sub, " ")));
 
 		// Board: Get your fried chicken
 		if (nation.getBoard() != null &&!nation.getBoard().isEmpty())
-			screen.addComponentOf("board", colourKeyValue(translator.of("status_town_board"), nation.getBoard()));
+			screen.addComponentOf("board", colourKeyValueComponent(translator.of("status_town_board"), nation.getBoard()));
 		
 		// Created Date
 		long registered = nation.getRegistered();
 		if (registered != 0)
-			screen.addComponentOf("registered", colourKeyValue(translator.of("status_founded"), registeredFormat.format(nation.getRegistered())));
+			screen.addComponentOf("registered", colourKeyValueComponent(translator.of("status_founded"), registeredFormat.format(nation.getRegistered())));
 
 		// Bank: 534 coins
 		if (TownyEconomyHandler.isActive())
@@ -477,7 +548,7 @@ public class TownyFormatter {
 		// King: King Harlus
 		if (nation.getNumTowns() > 0 && nation.hasCapital() && nation.getCapital().hasMayor()) {
 			Resident king = nation.getCapital().getMayor();
-			screen.addComponentOf("king", colourKeyValue(translator.of("status_nation_king"), king.getFormattedName()),
+			screen.addComponentOf("king", colourKeyValueComponent(translator.of("status_nation_king"), king.getFormattedName()),
 					HoverEvent.showText(Component.text(translator.of("registered_last_online", registeredFormat.format(king.getRegistered()), lastOnlineFormatIncludeYear.format(king.getLastOnline())))
 						.append(Component.newline())
 						.append(Component.text(translator.of("status_hover_click_for_more")))),
@@ -489,12 +560,12 @@ public class TownyFormatter {
 			String[] residents = getFormattedNames(capital.getResidents().toArray(new Resident[0]));
 			if (residents.length > 34)
 				residents = shortenOverlengthArray(residents, 35, translator);
-			screen.addComponentOf("capital", colourKeyValue(translator.of("status_capital"), nation.getCapital().getFormattedName()),
+			screen.addComponentOf("capital", colourKeyValueComponent(translator.of("status_capital"), nation.getCapital().getFormattedName()),
 				HoverEvent.showText(Component.text(Colors.translateColorCodes(String.format(TownySettings.getPAPIFormattingTown(), capital.getFormattedName())))
 					.append(Component.newline())
-					.append(Component.text(colourKeyValue(translator.of("rank_list_mayor"), king.getFormattedName())))
+					.append(colourKeyValueComponent(translator.of("rank_list_mayor"), king.getFormattedName()))
 					.append(Component.newline())
-					.append(Component.text(colourKeyValue(translator.of("res_list"), StringMgmt.join(residents, ", "))))
+					.append(colourKeyValueComponent(translator.of("res_list"), StringMgmt.join(residents, ", ")))
 					.append(Component.newline())
 					.append(Component.text(translator.of("status_hover_click_for_more")))),
 				ClickEvent.runCommand("/towny:town " + capital.getName())
@@ -502,14 +573,14 @@ public class TownyFormatter {
 			
 			// Nation Zone Size: 3
 			if (TownySettings.getNationZonesEnabled())
-				screen.addComponentOf("nationzone", colourKeyValue(translator.of("status_nation_zone_size"), String.valueOf(nation.getNationZoneSize())));
+				screen.addComponentOf("nationzone", colourKeyValueComponent(translator.of("status_nation_zone_size"), String.valueOf(nation.getNationZoneSize())));
 		}
 		
 		screen.addComponentOf("newline", Component.newline());
 		// Assistants [2]: Sammy, Ginger
 		List<String> ranklist = getRanks(nation, locale);
 		if (ranklist.size() > 0)
-			screen.addComponentOf("nationranks", colourHoverKey(translator.of("status_rank_list")),
+			screen.addComponentOf("nationranks", colourHoverKeyComponent(translator.of("status_rank_list")),
 				HoverEvent.showText(Component.text(String.join("\n", ranklist))
 						.append(Component.newline())
 						.append(Component.text(translator.of("status_hover_click_for_more")))),
@@ -519,7 +590,7 @@ public class TownyFormatter {
 		String[] towns = getFormattedNames(nation.getTowns().toArray(new Town[0]));
 		if (towns.length > 10)
 			towns = shortenOverlengthArray(towns, 11, translator);
-		screen.addComponentOf("towns", colourHoverKey(translator.of("status_nation_towns")),
+		screen.addComponentOf("towns", colourHoverKeyComponent(translator.of("status_nation_towns")),
 			HoverEvent.showText(Component.text(getFormattedStrings(translator.of("status_nation_towns"), Arrays.stream(towns).collect(Collectors.toList()), nation.getTowns().size()))
 					.append(Component.newline())
 					.append(Component.text(translator.of("status_hover_click_for_more")))),
@@ -530,7 +601,7 @@ public class TownyFormatter {
 		if (allies.length > 10)
 			allies = shortenOverlengthArray(allies, 11, translator);
 		if (allies.length > 0)
-			screen.addComponentOf("allies", colourHoverKey(translator.of("status_nation_allies")),
+			screen.addComponentOf("allies", colourHoverKeyComponent(translator.of("status_nation_allies")),
 				HoverEvent.showText(Component.text(getFormattedStrings(translator.of("status_nation_allies"), Arrays.stream(allies).collect(Collectors.toList()), nation.getAllies().size()))
 						.append(Component.newline())
 						.append(Component.text(translator.of("status_hover_click_for_more")))),
@@ -541,7 +612,7 @@ public class TownyFormatter {
 		if (enemies.length > 10)
 			enemies = shortenOverlengthArray(enemies, 11, translator);
 		if (enemies.length > 0)
-			screen.addComponentOf("enemies", colourHoverKey(translator.of("status_nation_enemies")),
+			screen.addComponentOf("enemies", colourHoverKeyComponent(translator.of("status_nation_enemies")),
 				HoverEvent.showText(Component.text(getFormattedStrings(translator.of("status_nation_enemies"), Arrays.stream(enemies).collect(Collectors.toList()), nation.getEnemies().size()))
 						.append(Component.newline())
 						.append(Component.text(translator.of("status_hover_click_for_more")))),
@@ -582,44 +653,55 @@ public class TownyFormatter {
 		final Translator translator = Translator.locale(Translation.getLocale(sender));
 
 		// ___[ World (PvP) ]___
-		screen.addComponentOf("townyworld_title", ChatTools.formatTitle(world.getFormattedName()));
-		screen.addComponentOf("subtitle", ChatTools.formatSubTitle(StringMgmt.join(getWorldSubtitle(world, translator), " ")));
+		screen.addComponentOf("townyworld_title", getTitleComponent(world.getFormattedName()));
+		screen.addComponentOf("subtitle", getSubTitleComponent(StringMgmt.join(getWorldSubtitle(world, translator), " ")));
 
 		if (!world.isUsingTowny()) {
 			screen.addComponentOf("not_using_towny", translator.of("msg_set_use_towny_off"));
 		} else {
 			// War will be allowed in this world.
-			screen.addComponentOf("war_allowed", colourKey(world.isWarAllowed() ? translator.of("msg_set_war_allowed_on") : translator.of("msg_set_war_allowed_off")));
+			screen.addComponentOf("war_allowed", colourKeyComponent(world.isWarAllowed() ? translator.of("msg_set_war_allowed_on") : translator.of("msg_set_war_allowed_off")));
 			// ForcePvP: ON | FriendlyFire: ON 
-			screen.addComponentOf("pvp", colourKeyValue(translator.of("status_world_forcepvp"), (world.isForcePVP() ? translator.of("status_on") : translator.of("status_off"))) + translator.of("status_splitter") + 
-					colourKeyValue(translator.of("status_world_friendlyfire"), (world.isFriendlyFireEnabled() ? translator.of("status_on") : translator.of("status_off"))));
+			screen.addComponentOf("pvp", colourKeyValueComponent(translator.of("status_world_forcepvp"), (world.isForcePVP() ? translator.of("status_on") : translator.of("status_off")))
+					.append(splitter) 
+					.append(colourKeyValueComponent(translator.of("status_world_friendlyfire"), (world.isFriendlyFireEnabled() ? translator.of("status_on") : translator.of("status_off")))));
 			// Fire: ON | ForceFire: ON
-			screen.addComponentOf("fire", colourKeyValue(translator.of("status_world_fire"), (world.isFire() ? translator.of("status_on") : translator.of("status_off"))) + translator.of("status_splitter") + 
-					colourKeyValue(translator.of("status_world_forcefire"), (world.isForceFire() ? translator.of("status_forced") : translator.of("status_adjustable"))));
+			screen.addComponentOf("fire", colourKeyValueComponent(translator.of("status_world_fire"), (world.isFire() ? translator.of("status_on") : translator.of("status_off")))
+					.append(splitter) 
+					.append(colourKeyValueComponent(translator.of("status_world_forcefire"), (world.isForceFire() ? translator.of("status_forced") : translator.of("status_adjustable")))));
 			// Explosion: ON | ForceExplosion: ON
-			screen.addComponentOf("explosions", colourKeyValue(translator.of("explosions"), (world.isExpl() ? translator.of("status_on") : translator.of("status_off"))) + translator.of("status_splitter") + 
-				    colourKeyValue(translator.of("status_world_forceexplosion"), (world.isForceExpl() ? translator.of("status_forced") : translator.of("status_adjustable"))));
+			screen.addComponentOf("explosions", colourKeyValueComponent(translator.of("explosions"), (world.isExpl() ? translator.of("status_on") : translator.of("status_off")))
+					.append(splitter) 
+					.append(colourKeyValueComponent(translator.of("status_world_forceexplosion"), (world.isForceExpl() ? translator.of("status_forced") : translator.of("status_adjustable")))));
 			// WorldMobs: ON | Wilderness Mobs: ON
-			screen.addComponentOf("mobs", colourKeyValue(translator.of("status_world_worldmobs"), (world.hasWorldMobs() ? translator.of("status_on") : translator.of("status_off"))) + translator.of("status_splitter") + 
-				    colourKeyValue(translator.of("status_world_wildernessmobs"), (world.hasWildernessMobs() ? translator.of("status_on") : translator.of("status_off"))));
+			screen.addComponentOf("mobs", colourKeyValueComponent(translator.of("status_world_worldmobs"), (world.hasWorldMobs() ? translator.of("status_on") : translator.of("status_off")))
+					.append(splitter) 
+					.append(colourKeyValueComponent(translator.of("status_world_wildernessmobs"), (world.hasWildernessMobs() ? translator.of("status_on") : translator.of("status_off")))));
 			// ForceTownMobs: ON
-			screen.addComponentOf("townmobs", colourKeyValue(translator.of("status_world_forcetownmobs"), (world.isForceTownMobs() ? translator.of("status_forced") : translator.of("status_adjustable"))));
+			screen.addComponentOf("townmobs", colourKeyValueComponent(translator.of("status_world_forcetownmobs"), (world.isForceTownMobs() ? translator.of("status_forced") : translator.of("status_adjustable"))));
 			// Unclaim Revert: ON
-			screen.addComponentOf("unclaim_revert", colourKeyValue("\n" + translator.of("status_world_unclaimrevert"), (world.isUsingPlotManagementRevert() ? translator.of("status_on_good") : translator.of("status_off_bad")))); 
+			screen.addComponentOf("unclaim_revert", colourKeyValueComponent("\n" + translator.of("status_world_unclaimrevert"), (world.isUsingPlotManagementRevert() ? translator.of("status_on_good") : translator.of("status_off_bad")))); 
 			// Entity Explosion Revert: ON | Block Explosion Revert: ON
-			screen.addComponentOf("explosion_reverts", colourKeyValue(translator.of("status_world_explrevert_entity"), (world.isUsingPlotManagementWildEntityRevert() ? translator.of("status_on_good") : translator.of("status_off_bad"))) + translator.of("status_splitter") +
-					colourKeyValue(translator.of("status_world_explrevert_block"), (world.isUsingPlotManagementWildBlockRevert() ? translator.of("status_on_good") : translator.of("status_off_bad"))));
+			screen.addComponentOf("explosion_reverts", colourKeyValueComponent(translator.of("status_world_explrevert_entity"), (world.isUsingPlotManagementWildEntityRevert() ? translator.of("status_on_good") : translator.of("status_off_bad")))
+					.append(splitter) 
+					.append(colourKeyValueComponent(translator.of("status_world_explrevert_block"), (world.isUsingPlotManagementWildBlockRevert() ? translator.of("status_on_good") : translator.of("status_off_bad")))));
 			// Plot Clear Block Delete: ON (see /towny plotclearblocks) | OFF
-			screen.addComponentOf("plot_clear", colourKeyValue(translator.of("status_plot_clear_deletion"), (world.isUsingPlotManagementMayorDelete() ? translator.of("status_on") + Colors.LightGreen +" (see /towny plotclearblocks)" : translator.of("status_off")))); 
+			screen.addComponentOf("plot_clear", colourKeyValueComponent(translator.of("status_plot_clear_deletion"), (world.isUsingPlotManagementMayorDelete() ? translator.of("status_on") + Colors.LightGreen +" (see /towny plotclearblocks)" : translator.of("status_off")))); 
 			// Wilderness:
 			//     Build, Destroy, Switch, ItemUse
 			//     Ignored Blocks: see /towny wildsblocks
-			screen.addComponentOf("wilderness", colourKey(world.getUnclaimedZoneName() + ": \n"));
-			screen.addComponentOf("perms1", "    " + (world.getUnclaimedZoneBuild() ? Colors.LightGreen : Colors.Rose) + translator.of("build") + Colors.Gray + ", " + 
-													(world.getUnclaimedZoneDestroy() ? Colors.LightGreen : Colors.Rose) + translator.of("destroy") + Colors.Gray + ", " + 
-													(world.getUnclaimedZoneSwitch() ? Colors.LightGreen : Colors.Rose) + translator.of("switch") + Colors.Gray + ", " + 
-													(world.getUnclaimedZoneItemUse() ? Colors.LightGreen : Colors.Rose) + translator.of("item_use"));
-			screen.addComponentOf("perms2", "    " + colourKey(translator.of("status_world_ignoredblocks") + Colors.LightGreen + " see /towny wildsblocks"));
+			screen.addComponentOf("wilderness", colourKeyComponent(world.getUnclaimedZoneName() + ": \n"));
+			screen.addComponentOf("perms1", Component.text("    ")
+				.append(Component.text(translator.of("build")).color(world.getUnclaimedZoneBuild() ? NamedTextColor.GREEN : NamedTextColor.RED))
+				.append(Component.text(", ").color(NamedTextColor.DARK_GRAY))
+				.append(Component.text(translator.of("destroy")).color(world.getUnclaimedZoneDestroy() ? NamedTextColor.GREEN : NamedTextColor.RED))
+				.append(Component.text(", ").color(NamedTextColor.DARK_GRAY))
+				.append(Component.text(translator.of("switch")).color(world.getUnclaimedZoneSwitch() ? NamedTextColor.GREEN : NamedTextColor.RED))
+				.append(Component.text(", ").color(NamedTextColor.DARK_GRAY))
+				.append(Component.text(translator.of("item_use")).color(world.getUnclaimedZoneItemUse() ? NamedTextColor.GREEN : NamedTextColor.RED)));
+			screen.addComponentOf("perms2", Component.text("    ")
+				.append(colourKeyComponent(translator.of("status_world_ignoredblocks")))
+				.append(Component.text(" see /towny wildsblocks").color(NamedTextColor.GREEN)));
 
 			// Add any metadata which opt to be visible.
 			List<Component> fields = getExtraFields(world);
@@ -640,22 +722,60 @@ public class TownyFormatter {
 	 * Utility methods used in the Status Screens.
 	 */
 	
+	private static Component colourKeyValueComponent(String key, String value) {
+		return Component.empty()
+				.append(Component.text(key).color(status_format_key_value_key))
+				.append(Component.text(value).color(status_format_key_value_value)); 
+	}
+	
+	private static Component colourKeyComponent(String key) {
+		return Component.text(key).color(status_format_key_value_key); 
+	}
+	
+	private static Component colourKeyImportantComponent(String key) {
+		return Component.text(key).color(status_format_key_important);
+	}
+	
+	private static Component colourBracketElementComponent(String key, String value) {
+		return Component.empty()
+				.append(Component.text("[").color(status_format_bracket_element)
+				.append(Component.text(key).color(status_format_bracket_element)))
+				
+				.append(Component.text(value).color(status_format_bracket_element))
+				.append(Component.text("]").color(status_format_bracket_element));
+	}
+	
+	private static Component colourHoverKeyComponent(String key) {
+		return Component.empty()
+				.append(Component.text("[").color(status_format_hover_bracket_colour)
+						.append(Component.text(key).color(status_format_hover_key))
+						.append(Component.text("]").color(status_format_hover_bracket_colour)));
+	}
+	
+	@Deprecated
 	private static String colourKeyValue(String key, String value) {
 		return String.format(keyValueFormat, Translation.of("status_format_key_value_key"), key, Translation.of("status_format_key_value_value"), value); 
 	}
 	
+	@Deprecated
 	private static String colourKey(String key) {
 		return String.format(keyFormat, Translation.of("status_format_key_value_key"), key); 
 	}
 	
+	@SuppressWarnings("unused")
+	@Deprecated
 	private static String colourKeyImportant(String key) {
 		return String.format(keyFormat, Translation.of("status_format_key_important"), key);
 	}
 	
+	@SuppressWarnings("unused")
+	@Deprecated
 	private static String colourBracketElement(String key, String value) {
 		return String.format(bracketFormat, Translation.of("status_format_bracket_element"), key, value);
 	}
 	
+	@SuppressWarnings("unused")
+	@Deprecated
 	private static String colourHoverKey(String key) {
 		return String.format(hoverFormat, Translation.of("status_format_hover_bracket_colour"), Translation.of("status_format_hover_key"), key, Translation.of("status_format_hover_bracket_colour"));
 	}
@@ -670,8 +790,8 @@ public class TownyFormatter {
 	 * @param translator Translator used for lang choice.
 	 * @return String with registered date formatted for use in the StatusScreen. 
 	 */
-	private static String getResidentRegisteredLine(Resident resident, Translator translator) {
-		return (!resident.isNPC() ? colourKeyValue(translator.of("status_registered"), registeredFormat.format(resident.getRegistered())) : colourKeyValue(translator.of("npc_created"), registeredFormat.format(resident.getRegistered())));
+	private static Component getResidentRegisteredLine(Resident resident, Translator translator) {
+		return (!resident.isNPC() ? colourKeyValueComponent(translator.of("status_registered"), registeredFormat.format(resident.getRegistered())) : colourKeyValueComponent(translator.of("npc_created"), registeredFormat.format(resident.getRegistered())));
 	}
 	
 	/**
@@ -680,16 +800,16 @@ public class TownyFormatter {
 	 * @param translator Translator used for lang choice.
 	 * @return String with last online times formatted for use in the StatusScreen. 
 	 */
-	private static String getResidentLastOnline(Resident resident, Translator translator) {
-		return (sameYear(resident) ? colourKeyValue(translator.of("status_lastonline"), lastOnlineFormat.format(resident.getLastOnline())) : colourKeyValue(translator.of("status_lastonline"), lastOnlineFormatIncludeYear.format(resident.getLastOnline())));
+	private static Component getResidentLastOnline(Resident resident, Translator translator) {
+		return (sameYear(resident) ? colourKeyValueComponent(translator.of("status_lastonline"), lastOnlineFormat.format(resident.getLastOnline())) : colourKeyValueComponent(translator.of("status_lastonline"), lastOnlineFormatIncludeYear.format(resident.getLastOnline())));
 	}
 	
-	private static String getResidentJoinedTownDate(Resident resident, Translator translator) {
-		return colourKeyValue(translator.of("status_joined_town"), resident.getJoinedTownAt() > 0 ? lastOnlineFormatIncludeYear.format(resident.getJoinedTownAt()) : translator.of("status_unknown"));
+	private static Component getResidentJoinedTownDate(Resident resident, Translator translator) {
+		return colourKeyValueComponent(translator.of("status_joined_town"), resident.getJoinedTownAt() > 0 ? lastOnlineFormatIncludeYear.format(resident.getJoinedTownAt()) : translator.of("status_unknown"));
 	}
 	
-	private static String getTownJoinedNationDate(Town town, Translator translator) {
-		return colourKeyValue(translator.of("status_joined_nation"), town.getJoinedNationAt() > 0 ? lastOnlineFormatIncludeYear.format(town.getJoinedNationAt()) : translator.of("status_unknown"));
+	private static Component getTownJoinedNationDate(Town town, Translator translator) {
+		return colourKeyValueComponent(translator.of("status_joined_nation"), town.getJoinedNationAt() > 0 ? lastOnlineFormatIncludeYear.format(town.getJoinedNationAt()) : translator.of("status_unknown"));
 	}
 	
 	private static boolean sameYear(Resident resident) {
@@ -707,12 +827,12 @@ public class TownyFormatter {
 	 * @param translator Translator used in language switching.
 	 * @return String formatted jailLine.
 	 */
-	private static String getResidentJailedLine(Resident resident, Translator translator) {
-		String jailLine = colourKeyValue(translator.of("status_jailed"), (resident.isJailed() ? translator.of("status_bad_yes") : translator.of("status_good_no")));
+	private static Component getResidentJailedLine(Resident resident, Translator translator) {
+		Component jailLine = colourKeyValueComponent(translator.of("status_jailed"), (resident.isJailed() ? translator.of("status_bad_yes") : translator.of("status_good_no")));
 		if (resident.isJailed())
-			jailLine += colourKey(translator.of("jailed_in_town", resident.getJailTown().getName()));
+			jailLine.append(colourKeyComponent(translator.of("jailed_in_town", resident.getJailTown().getName())));
 		if (resident.isJailed() && resident.hasJailTime())
-			jailLine += colourKey(translator.of("msg_jailed_for_x_hours", resident.getJailHours()));
+			jailLine.append(colourKeyComponent(translator.of("msg_jailed_for_x_hours", resident.getJailHours())));
 		return jailLine;
 	}
 	
@@ -792,19 +912,30 @@ public class TownyFormatter {
 	 */
 	private static void addTownMoneyComponents(Town town, Translator translator, StatusScreen screen) {
 		screen.addComponentOf("moneynewline", Component.newline());
-		screen.addComponentOf("bankString", colourKeyValue(translator.of("status_bank"), town.getAccount().getHoldingFormattedBalance()));
+		screen.addComponentOf("bankString", colourKeyValueComponent(translator.of("status_bank"), town.getAccount().getHoldingFormattedBalance()));
 		if (town.isBankrupt()) {
 			if (town.getAccount().getDebtCap() == 0)
 				town.getAccount().setDebtCap(MoneyUtil.getEstimatedValueOfTown(town));
-			screen.addComponentOf("bankrupt", translator.of("status_bank_bankrupt") + " " + colourKeyValue(translator.of("status_debtcap"), "-" + formatMoney(town.getAccount().getDebtCap())));
+			screen.addComponentOf("bankrupt", Component.text(translator.of("status_bank_bankrupt")).append(Component.space()).append(colourKeyValueComponent(translator.of("status_debtcap"), "-" + formatMoney(town.getAccount().getDebtCap()))));
 		}
 		if (town.hasUpkeep())
-			screen.addComponentOf("upkeep", translator.of("status_splitter") + colourKey(translator.of("status_bank_town2")) + " " + colourKeyImportant(formatMoney(BigDecimal.valueOf(TownySettings.getTownUpkeepCost(town)).setScale(2, RoundingMode.HALF_UP).doubleValue())));
+			screen.addComponentOf("upkeep", splitter
+				.append(colourKeyComponent(translator.of("status_bank_town2")))
+				.append(Component.space())
+				.append(colourKeyImportantComponent(formatMoney(BigDecimal.valueOf(TownySettings.getTownUpkeepCost(town)).setScale(2, RoundingMode.HALF_UP).doubleValue()))));
 		if (TownySettings.getUpkeepPenalty() > 0 && town.isOverClaimed())
-			screen.addComponentOf("upkeepPenalty", translator.of("status_splitter") + colourKey(translator.of("status_bank_town_penalty_upkeep")) + " " + colourKeyImportant(formatMoney(TownySettings.getTownPenaltyUpkeepCost(town))));
+			screen.addComponentOf("upkeepPenalty", splitter
+				.append(colourKeyComponent(translator.of("status_bank_town_penalty_upkeep")))
+				.append(Component.space())
+				.append(colourKeyImportantComponent(formatMoney(TownySettings.getTownPenaltyUpkeepCost(town)))));
 		if (town.isNeutral() && TownySettings.getTownNeutralityCost() > 0)
-			screen.addComponentOf("neutralityCost", translator.of("status_splitter") + colourKey(translator.of("status_neutrality_cost") + " " + colourKeyImportant(formatMoney(TownySettings.getTownNeutralityCost()))));
-		screen.addComponentOf("towntax", translator.of("status_splitter") + colourKey(translator.of("status_bank_town3")) + " " + colourKeyImportant(town.isTaxPercentage() ? town.getTaxes() + "%" : formatMoney(town.getTaxes())));
+			screen.addComponentOf("neutralityCost", splitter
+				.append(colourKeyComponent(translator.of("status_neutrality_cost")))
+				.append(Component.space())
+				.append(colourKeyImportantComponent(formatMoney(TownySettings.getTownNeutralityCost()))));
+		screen.addComponentOf("towntax", splitter
+			.append(colourKeyComponent(translator.of("status_bank_town3")))
+			.append(colourKeyImportantComponent(town.isTaxPercentage() ? town.getTaxes() + "%" : formatMoney(town.getTaxes()))));
 	}
 
 	/**
@@ -815,16 +946,25 @@ public class TownyFormatter {
 	 */
 	private static void addNationMoneyComponentsToScreen(Nation nation, Translator translator, StatusScreen screen) {
 		screen.addComponentOf("moneynewline", Component.newline());
-		screen.addComponentOf("bankString", colourKeyValue(translator.of("status_bank"), nation.getAccount().getHoldingFormattedBalance()));
+		screen.addComponentOf("bankString", colourKeyValueComponent(translator.of("status_bank"), nation.getAccount().getHoldingFormattedBalance()));
 		if (TownySettings.getNationUpkeepCost(nation) > 0)
-			screen.addComponentOf("nationupkeep", translator.of("status_splitter") + colourKey(translator.of("status_bank_town2") + " " + colourKeyImportant(formatMoney(TownySettings.getNationUpkeepCost(nation)))));
+			screen.addComponentOf("nationupkeep", splitter
+				.append(colourKeyComponent(translator.of("status_bank_town2")))
+				.append(Component.space())
+				.append(colourKeyImportantComponent(formatMoney(TownySettings.getNationUpkeepCost(nation)))));
 		if (nation.isNeutral() && TownySettings.getNationNeutralityCost() > 0)
-			screen.addComponentOf("neutralityCost", translator.of("status_splitter") + colourKey(translator.of("status_neutrality_cost") + " " + colourKeyImportant(formatMoney(TownySettings.getNationNeutralityCost()))));
-		screen.addComponentOf("nationtax", translator.of("status_splitter") + colourKey(translator.of("status_nation_tax")) + " " + colourKeyImportant(formatMoney(nation.getTaxes())));
+			screen.addComponentOf("neutralityCost", splitter
+				.append(colourKeyComponent(translator.of("status_neutrality_cost")))
+				.append(Component.space())
+				.append(colourKeyImportantComponent(formatMoney(TownySettings.getNationNeutralityCost()))));
+		screen.addComponentOf("nationtax", splitter
+			.append(colourKeyComponent(translator.of("status_nation_tax")))
+			.append(Component.space())
+			.append(colourKeyImportantComponent(formatMoney(nation.getTaxes()))));
 	}
 
 	private static String formatMoney(double money) {
-		return TownyEconomyHandler.getFormattedBalance(money);
+		return Colors.strip(TownyEconomyHandler.getFormattedBalance(money));
 	}
 
 	/**
@@ -953,6 +1093,35 @@ public class TownyFormatter {
 	 */
 	public static String getFormattedTownyObjects(String prefix, List<TownyObject> objectlist) {
 		return String.format(listPrefixFormat, prefix, objectlist.size(), Translation.of("status_format_list_1"), Translation.of("status_format_list_2"), Translation.of("status_format_list_3")) + StringMgmt.join(getFormattedTownyNames(objectlist), ", "); 
+	}
+	
+	/**
+	 * Used to prefix, count and list the given object.
+	 * @param prefix String applied to beginning of the list.
+	 * @param objectlist List of TownyObjects to list.
+	 * @return Formatted, prefixed list of TownyObjects as a Component.
+	 */
+	// "%3$s%1$s %4$s[%2$d]%3$s:%5$s "
+	public static Component getFormattedTownyObjectsComponent(String prefix, List<TownyObject> objectlist) {
+		return Component.text(prefix).color(status_format_list_1)
+				.append(Component.space())
+				.append(Component.text("[" + objectlist.size() + "]").color(status_format_list_2))
+				.append(Component.text(":").color(status_format_list_1))
+				.append(Component.space())
+				.append(getFormattedTownyNamesAsComponent(objectlist).color(status_format_list_3)); 
+	}
+	
+	/**
+	 * Returns a list of names.
+	 * If the list is under 20 long, it will use the formatted names.
+	 * @param objs List of TownyObjects of which to make a list of names.
+	 * @return Component of names separated by commands.
+	 */
+	public static Component getFormattedTownyNamesAsComponent(List<TownyObject> objs) {
+		List<String> names = new ArrayList<>();
+		for (TownyObject obj : objs)
+			names.add(Colors.strip(objs.size() < 20 ? obj.getFormattedName() : obj.getName()));
+		return Component.text(StringMgmt.join(names, ", "));
 	}
 	
 	/**

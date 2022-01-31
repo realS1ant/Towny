@@ -1404,7 +1404,9 @@ status_format_bracket_element: '&b'         # Colour applied to a status element
 status_format_hover_key: '&a'               # Colour applied to a status screen element which is a hover-able key, ex: [Rank List]
 status_format_hover_bracket_colour: '&7'    # Colour applied to the brackets of a hover-able status screen element.
 status_format_key_important: '&c'           # Colour applied to an important status screen value, ex: (BANKRUPT), Ruined town reclaim lines, taxes/upkeep costs.
-status_splitter: ' &7| '                    # Used in status screens where a splitter is used between values.
+status_splitter: ' | '                      # Used in status screens where a splitter is used between values.
+status_splitter_colour: '&7'                # Used in status screens to colour the splitter.
+
 status_home_element: ' &7[Home: %s]'
 status_registered: 'Registered:'
 status_lastonline: 'Last Online:'

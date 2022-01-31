@@ -143,7 +143,6 @@ public class Towny extends JavaPlugin {
 		BukkitTools.initialize(this);
 		TownyTimerHandler.initialize(this);
 		TownyEconomyHandler.initialize(this);
-		TownyFormatter.initialize();
 		PlayerCacheUtil.initialize(this);
 		TownyPerms.initialize(this);
 		InviteHandler.initialize(this);
@@ -151,6 +150,7 @@ public class Towny extends JavaPlugin {
 		try {
 			// Load the foundation of Towny, containing config, locales, database.
 			loadFoundation(false);
+			TownyFormatter.initialize();
 
 			// Check for plugins that we use or we develop.
 			// N.B. Includes the hook for TownyChat

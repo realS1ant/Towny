@@ -17,6 +17,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 
 public class StatusScreen {
 
@@ -32,6 +33,7 @@ public class StatusScreen {
 		return sender;
 	}
 
+	@Deprecated
 	public void addComponentOf(String name, String text) {
 		components.put(name, Component.text(text));
 	}
@@ -40,14 +42,29 @@ public class StatusScreen {
 		components.put(name, component);
 	}
 	
+	public void addComponentOf(String name, Component component, ClickEvent click) {
+		components.put(name, component.clickEvent(click));
+	}
+	
+	@Deprecated
 	public void addComponentOf(String name, String text, ClickEvent click) {
 		components.put(name, Component.text(text).clickEvent(click));
 	}
 	
+	public void addComponentOf(String name, Component component, HoverEvent hover) {
+		components.put(name, component.hoverEvent(hover));
+	}
+	
+	@Deprecated
 	public void addComponentOf(String name, String text, HoverEvent hover) {
 		components.put(name, Component.text(text).hoverEvent(hover));
 	}
 	
+	public void addComponentOf(String name, Component component, HoverEvent hover, ClickEvent click) {
+		components.put(name, component.hoverEvent(hover).clickEvent(click));
+	}
+	
+	@Deprecated
 	public void addComponentOf(String name, String text, HoverEvent hover, ClickEvent click) {
 		components.put(name, Component.text(text).hoverEvent(hover).clickEvent(click));
 	}
@@ -170,6 +187,10 @@ public class StatusScreen {
 	}
 
 	private boolean lineWouldBeTooLong(String string, Component comp) {
-		return (Colors.strip(string).length() + Colors.strip(getContent(comp)).length() + 1) > MAX_WIDTH;
+		return (Colors.strip(string).length() + strip(comp).length() + 1) > MAX_WIDTH;
+	}
+	
+	private String strip(Component comp) {
+		return PlainTextComponentSerializer.plainText().serialize(comp);
 	}
 }

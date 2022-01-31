@@ -7230,3 +7230,4 @@ v0.92.0.11:
     - Closes #5685.
   - Switch over to ChatColor's colour-stripping.
     - Closes #5680.
+  - Implement ForwardingAudience on government and resident, courtesy of Warriorrrr with PR #5700.
