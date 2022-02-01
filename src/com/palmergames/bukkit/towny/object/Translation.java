@@ -2,6 +2,7 @@ package com.palmergames.bukkit.towny.object;
 
 import com.palmergames.bukkit.config.ConfigNodes;
 import com.palmergames.bukkit.towny.Towny;
+import com.palmergames.bukkit.towny.TownyFormatter;
 import com.palmergames.bukkit.towny.TownySettings;
 import com.palmergames.bukkit.towny.TownyUniverse;
 import com.palmergames.bukkit.towny.command.HelpMenu;
@@ -69,15 +70,28 @@ public final class Translation {
 
 		// Load HelpMenus only after translations have been set.
 		HelpMenu.loadMenus();
+		// Load colour strings into memory for TownyFormatter.
+		TownyFormatter.initialize();
+	}
+
+	/**
+	 * Translates given key into the default Locale, parsing colours if found.
+	 * 
+	 * @param key The language key.
+	 * @return The localized string.
+	 */
+	public static String of(String key) {
+		return of(key, true);
 	}
 	
 	/**
 	 * Translates given key into the default Locale.
 	 * 
 	 * @param key The language key.
+	 * @param color Whether any colour codes will be translated.
 	 * @return The localized string.
 	 */
-	public static String of(String key) {
+	public static String of(String key, boolean color) {
 		if (defaultLocale == null) {
 			Towny.getPlugin().getLogger().warning("Error: Tried to translate before a locale could be loaded!");
 			return key;
@@ -96,7 +110,9 @@ public final class Translation {
 				return key;
 			}
 		}
-		return Colors.translateColorCodes(data);
+		if (color)
+			data = Colors.translateColorCodes(data);
+		return data;
 	}
 
 	/**

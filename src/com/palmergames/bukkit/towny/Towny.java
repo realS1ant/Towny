@@ -150,7 +150,6 @@ public class Towny extends JavaPlugin {
 		try {
 			// Load the foundation of Towny, containing config, locales, database.
 			loadFoundation(false);
-			TownyFormatter.initialize();
 
 			// Check for plugins that we use or we develop.
 			// N.B. Includes the hook for TownyChat

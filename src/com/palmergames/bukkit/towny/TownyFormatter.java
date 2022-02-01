@@ -84,24 +84,24 @@ public class TownyFormatter {
 	public static Component splitter;
 	
 	public static void initialize() {
-		status_title_primary_colour = getTextColor(Translation.of("status_title_primary_colour"), NamedTextColor.GOLD);
-		status_title_secondary_colour = getTextColor(Translation.of("status_title_secondary_colour"), NamedTextColor.YELLOW);
-		status_format_list_1 = getTextColor(Translation.of("status_format_list_1"), NamedTextColor.DARK_GREEN);
-		status_format_list_2 = getTextColor(Translation.of("status_format_list_2"), NamedTextColor.GREEN);
-		status_format_list_3 = getTextColor(Translation.of("status_format_list_3"), NamedTextColor.WHITE);
-		status_format_key_value_key = getTextColor(Translation.of("status_format_key_value_key"), NamedTextColor.DARK_GREEN);
-		status_format_key_value_value = getTextColor(Translation.of("status_format_key_value_value"), NamedTextColor.GREEN);
-		status_format_bracket_element = getTextColor(Translation.of("status_format_bracket_element"), NamedTextColor.AQUA);
-		status_format_hover_key = getTextColor(Translation.of("status_format_hover_key"), NamedTextColor.GREEN);
-		status_format_hover_bracket_colour = getTextColor(Translation.of("status_format_hover_bracket_colour"), NamedTextColor.GRAY);
-		status_format_key_important = getTextColor(Translation.of("status_format_key_important"), NamedTextColor.RED);
-		status_splitter_colour = getTextColor(Translation.of("status_splitter_colour"), NamedTextColor.GRAY);
-		splitter = Component.text(Translation.of("status_splitter")).color(status_splitter_colour);
+		status_title_primary_colour = getTextColor(Translation.of("status_title_primary_colour", false), NamedTextColor.GOLD);
+		status_title_secondary_colour = getTextColor(Translation.of("status_title_secondary_colour", false), NamedTextColor.YELLOW);
+		status_format_list_1 = getTextColor(Translation.of("status_format_list_1", false), NamedTextColor.DARK_GREEN);
+		status_format_list_2 = getTextColor(Translation.of("status_format_list_2", false), NamedTextColor.GREEN);
+		status_format_list_3 = getTextColor(Translation.of("status_format_list_3", false), NamedTextColor.WHITE);
+		status_format_key_value_key = getTextColor(Translation.of("status_format_key_value_key", false), NamedTextColor.DARK_GREEN);
+		status_format_key_value_value = getTextColor(Translation.of("status_format_key_value_value", false), NamedTextColor.GREEN);
+		status_format_bracket_element = getTextColor(Translation.of("status_format_bracket_element", false), NamedTextColor.AQUA);
+		status_format_hover_key = getTextColor(Translation.of("status_format_hover_key", false), NamedTextColor.GREEN);
+		status_format_hover_bracket_colour = getTextColor(Translation.of("status_format_hover_bracket_colour", false), NamedTextColor.GRAY);
+		status_format_key_important = getTextColor(Translation.of("status_format_key_important", false), NamedTextColor.RED);
+		status_splitter_colour = getTextColor(Translation.of("status_splitter_colour", false), NamedTextColor.GRAY);
+		splitter = Component.text(Translation.of("status_splitter", false)).color(status_splitter_colour);
 	}
 	
 	private static TextColor getTextColor(String value, NamedTextColor fallback) {
 		TextColor color = Colors.toNamedTextColor(value);
-		if (color == null) 
+		if (color == null)
 			color = TextColor.fromHexString(value);
 		if (color == null)
 			color = fallback;
@@ -722,10 +722,12 @@ public class TownyFormatter {
 	 * Utility methods used in the Status Screens.
 	 */
 	
-	private static Component colourKeyValueComponent(String key, String value) {
-		return Component.empty()
-				.append(Component.text(key).color(status_format_key_value_key))
-				.append(Component.text(value).color(status_format_key_value_value)); 
+	private static TextComponent colourKeyValueComponent(String key, String value) {
+		return Component.text()
+				.content(key)
+				.color(status_format_key_value_key)
+				.append(Component.text().content(value).color(status_format_key_value_value))
+				.build();
 	}
 	
 	private static Component colourKeyComponent(String key) {

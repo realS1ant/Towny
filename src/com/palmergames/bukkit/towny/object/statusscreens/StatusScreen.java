@@ -130,7 +130,7 @@ public class StatusScreen {
 						continue;
 					}
 					if (currentLine.equals(Component.empty())) {
-						// We're dealing with a new line, our child component becomes tShe start of a line.
+						// We're dealing with a new line, our child component becomes the start of a line.
 						currentLine = child;
 						string = getContent(currentLine);
 						continue;
