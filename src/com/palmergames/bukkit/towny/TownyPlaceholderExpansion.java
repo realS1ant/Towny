@@ -1,5 +1,6 @@
 package com.palmergames.bukkit.towny;
 
+import com.palmergames.bukkit.config.ConfigNodes;
 import com.palmergames.bukkit.towny.object.TownBlock;
 import com.palmergames.bukkit.towny.object.Translation;
 import com.palmergames.bukkit.towny.utils.CombatUtil;
@@ -168,27 +169,27 @@ public class TownyPlaceholderExpansion extends PlaceholderExpansion implements R
 				town = String.format(TownySettings.getPAPIFormattingTown(), resident.getTown().getName());
 			} catch (NotRegisteredException ignored) {
 			}
-			return StringMgmt.remUnderscore(town);
+			return checkEmpty(StringMgmt.remUnderscore(town));
 		case "town_formatted": // %townyadvanced_town_formatted%
 			try {
 				town = String.format(TownySettings.getPAPIFormattingTown(), resident.getTown().getFormattedName());
 			} catch (NotRegisteredException ignored) {
 			}
-			return StringMgmt.remUnderscore(town);
+			return checkEmpty(StringMgmt.remUnderscore(town));
 		case "nation": // %townyadvanced_nation%
 			try {
 				nation = String.format(TownySettings.getPAPIFormattingNation(),
 						resident.getTown().getNation().getName());
 			} catch (NotRegisteredException ignored) {
 			}
-			return StringMgmt.remUnderscore(nation);
+			return checkEmpty(StringMgmt.remUnderscore(nation));
 		case "nation_formatted": // %townyadvanced_nation_formatted%
 			try {
 				nation = String.format(TownySettings.getPAPIFormattingNation(),
 						resident.getTown().getNation().getFormattedName());
 			} catch (NotRegisteredException ignored) {
 			}
-			return StringMgmt.remUnderscore(nation);
+			return checkEmpty(StringMgmt.remUnderscore(nation));
 		case "town_balance": // %townyadvanced_town_balance%
 			try {
 				if (TownyEconomyHandler.isActive())
@@ -208,7 +209,7 @@ public class TownyPlaceholderExpansion extends PlaceholderExpansion implements R
 				tag = String.format(TownySettings.getPAPIFormattingTown(), resident.getTown().getTag());
 			} catch (NotRegisteredException ignored) {
 			}
-			return tag;
+			return checkEmpty(tag);
 		case "town_tag_override": // %townyadvanced_town_tag_override%
 			try {
 				if (resident.getTown().hasTag())
@@ -217,13 +218,13 @@ public class TownyPlaceholderExpansion extends PlaceholderExpansion implements R
 					tag = StringMgmt.remUnderscore(String.format(TownySettings.getPAPIFormattingTown(), resident.getTown().getName()));
 			} catch (NotRegisteredException ignored) {
 			}
-			return tag;
+			return checkEmpty(tag);
 		case "nation_tag": // %townyadvanced_nation_tag%
 			try {
 				tag = String.format(TownySettings.getPAPIFormattingNation(), resident.getTown().getNation().getTag());
 			} catch (NotRegisteredException ignored) {
 			}
-			return tag;
+			return checkEmpty(tag);
 		case "nation_tag_override": // %townyadvanced_nation_tag_override%
 			try {
 				if (resident.getTown().getNation().hasTag())
@@ -234,7 +235,7 @@ public class TownyPlaceholderExpansion extends PlaceholderExpansion implements R
 							resident.getTown().getNation().getName()));
 			} catch (NotRegisteredException ignored) {
 			}
-			return tag;
+			return checkEmpty(tag);
 		case "towny_tag": // %townyadvanced_towny_tag%
 			try {
 				if (resident.hasTown()) {
@@ -251,7 +252,7 @@ public class TownyPlaceholderExpansion extends PlaceholderExpansion implements R
 
 			} catch (NotRegisteredException ignored) {
 			}
-			return tag;
+			return checkEmpty(tag);
 		case "towny_formatted": // %townyadvanced_towny_formatted%
 			try {
 				if (resident.hasTown()) {
@@ -266,7 +267,7 @@ public class TownyPlaceholderExpansion extends PlaceholderExpansion implements R
 
 			} catch (NotRegisteredException ignored) {
 			}
-			return tag;
+			return checkEmpty(tag);
 		case "towny_tag_formatted": // %townyadvanced_towny_tag_formatted%
 			try {
 				if (resident.hasTown()) {
@@ -287,7 +288,7 @@ public class TownyPlaceholderExpansion extends PlaceholderExpansion implements R
 					tag = String.format(TownySettings.getPAPIFormattingTown(), town);
 			} catch (NotRegisteredException ignored) {
 			}
-			return tag;
+			return checkEmpty(tag);
 		case "towny_tag_override": // %townyadvanced_towny_tag_override%
 			try {
 				if (resident.hasTown()) {
@@ -308,7 +309,7 @@ public class TownyPlaceholderExpansion extends PlaceholderExpansion implements R
 					tag = String.format(TownySettings.getPAPIFormattingTown(), town);
 			} catch (NotRegisteredException ignored) {
 			}
-			return tag;
+			return checkEmpty(tag);
 		case "title": // %townyadvanced_title%
 			if (resident.hasTitle())
 				title = resident.getTitle();
@@ -529,7 +530,7 @@ public class TownyPlaceholderExpansion extends PlaceholderExpansion implements R
 					tag = String.format(TownySettings.getPAPIFormattingTown(), town);
 			} catch (NotRegisteredException ignored) {
 			}
-			return tag;
+			return checkEmpty(tag);
 		case "town_map_color_hex": // %townyadvanced_town_map_color_hex%
 			if (resident.hasTown()){
 				hex = resident.getTownOrNull().getMapColorHexCode();
@@ -650,5 +651,15 @@ public class TownyPlaceholderExpansion extends PlaceholderExpansion implements R
 			default:
 				return null;
 		}
+	}
+
+	/**
+	 * Replaces an empty string with a placeholder value specified in the plugin config.
+	 * 
+	 * @param string the string to check and replace
+	 * @return placeholder value defined in config instead of an empty string
+	 */
+	private String checkEmpty(String string) {
+		return string.isEmpty() ? TownySettings.getString(ConfigNodes.PAPI_EMPTY_VALUE) : string;
 	}
 }

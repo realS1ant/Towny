@@ -43,6 +43,14 @@ public enum ConfigNodes {
 			"# If you would like to only allow 4 languages use: en-US,ru-RU,es-ES,fr-FR",
 			"# If a player's locale isn't enabled or isn't available it will use the language above instead."),
 
+	PAPI_ROOT("papi", "", "",
+		"############################################################",
+		"# +------------------------------------------------------+ #",
+		"# |               Placeholder API Settings               | #",
+		"# +------------------------------------------------------+ #",
+		"############################################################"),
+	PAPI_EMPTY_VALUE("papi.empty_value", "None", "# The value you wish to use for empty placeholders instead of a blank string."),
+	
 	PERMS(
 			"permissions",
 			"",
